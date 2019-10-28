@@ -6,7 +6,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 
-public abstract class ReadOnlyLinkable<T> extends LinkableBase {
+public abstract class ReadOnlyLinkable<T> extends Readable<T>{
 	
 	public interface BasicListener<T> {
 		
@@ -80,6 +80,4 @@ public abstract class ReadOnlyLinkable<T> extends LinkableBase {
 	public abstract <U> U focus(Function<T, U> work);
 	
 	public abstract void focus(Consumer<T> work);
-	
-	public abstract T get();
 }

@@ -10,7 +10,7 @@ import java.util.function.UnaryOperator;
 
 
 
-public class Linkable<T> extends ReadOnlyLinkable<T> {
+public class Linkable<T> extends ReadOnlyLinkable<T>{
 	
 	private byte lazyflag;
 	
