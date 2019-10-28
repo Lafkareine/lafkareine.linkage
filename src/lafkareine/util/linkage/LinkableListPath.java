@@ -6,7 +6,7 @@ import java.util.List;
 
 public class LinkableListPath<T, U extends LinkableBase> extends LinkableBase {
 
-	public interface Getter<T, U extends  LinkableBase> {
+	public interface Getter<T, U extends LinkableBase> {
 		U get(T from);
 	}
 
