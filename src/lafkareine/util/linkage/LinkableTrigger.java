@@ -19,7 +19,6 @@ public class LinkableTrigger extends LinkableBase {
 	@Override
 	protected void action() {
 		// TODO 自動生成されたメソッド・スタブ
-
 	}
 
 }

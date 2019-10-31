@@ -2,12 +2,15 @@
 package lafkareine.util.linkage;
 
 
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
-public class LinkableListPath<T, U extends LinkableBase> extends LinkableBase {
+public class LinkableListPath<T, U> extends Readable<List<U>> {
 
-	public interface Getter<T, U extends LinkableBase> {
-		U get(T from);
+	@Override
+	public List<U> get() {
+		return cache;
 	}
 
 	public interface Listener{
@@ -19,78 +22,65 @@ public class LinkableListPath<T, U extends LinkableBase> extends LinkableBase {
 	private static final Listener[] NOTHING_LISTENER = new Listener[] {};
 
 
-	private Getter<T, U> getter;
+	private Navigator<T, U> navigator;
 
-	private ReadOnlyLinkable<List<T>> from;
+	private Readable<Collection<T>> from;
 
 	private List<U> cache;
 
-	public LinkableListPath(ReadOnlyLinkable<List<T>> from, Getter<T,U> getter) {
-		set(from, getter);
+	public LinkableListPath(){
+		super();
 	}
 
-	public void set(ReadOnlyLinkable<List<T>> from, Getter<T,U> getter) {
-		this.from = from;
-		this.getter = getter;
-		launchUpdate(makeInputsArray(from, getter));
+	public LinkableListPath(Readable<Collection<T>> from, Navigator<T,U> navigator) {
+		set(from, navigator);
 	}
 
-	public void set(ReadOnlyLinkable<List<T>> from) {
+	public void set(Readable<Collection<T>> from, Navigator<T,U> navigator) {
 		this.from = from;
-		launchUpdate(makeInputsArray(from, getter));
+		this.navigator = navigator;
+		launchUpdate(makeInputsArray(from, navigator));
+	}
+
+	public void set(Readable<Collection<T>> from) {
+		this.from = from;
+		launchUpdate(makeInputsArray(from, navigator));
 	}
 
 	public final U pick(int index){
-		return getter.get(from.get().get(index));
+		return cache.get(index);
 	}
 
 	@Override
 	protected void action() {
 		// TODO 自動生成されたメソッド・スタブ
-		setInputsInSecretly(makeInputsArray(from, getter));
-	}
-
-	private void runListener(){
-
-		for(var e:listeners){
-			e.exchange();
+		setInputsInSecretly(makeInputsArray(from, navigator));
+		if(isReady()){
+			List<U> oldcache = cache;
+			cache = makeCache(from.get(), navigator);
+			runListener(oldcache, cache);
 		}
 	}
 
-	private static <T, U extends LinkableBase> LinkableBase[] makeInputsArray(ReadOnlyLinkable<List<T>> from, Getter<T,U> getter){
-		LinkableBase[] parents = new LinkableBase[from.get().size()+1];
+	private void runListener(List<U> old, List<U> neo){
+		for(var e:getListeners()){
+			e.listen(old,neo);
+		}
+	}
+
+	private static <T, U> LinkableBase[] makeInputsArray(Readable<Collection<T>> from, Navigator<T,U> navigator){
+		final Collection<T> container = from.get();
+		LinkableBase[] parents = new LinkableBase[container.size()+1];
 		int i = 0;
-		for(var e:from.get()){
-			parents[i++] = getter.get(e);
+		for(var e:container){
+			parents[i++] = navigator.get(e);
 		}
 		parents[i] = from;
 		return  parents;
 	}
 
-	public final Listener addListner(Listener added){
-		if(added == null) return null;
-		final Listener[] new_array = new Listener[listeners.length+1];
-		final Listener[] old_array = listeners;
-		for(int i = 0; i < old_array.length; i++){
-			new_array[i] = old_array[i];
-		}
-		new_array[old_array.length] = added;
-		return  added;
-	}
-
-	public final boolean removeListner(Listener added){
-		final Listener[] old_array = listeners;
-		int nullnum = 0;
-		for(int i = 0; i < old_array.length; i++){
-			if(old_array[i] == added)old_array[i] = null;
-			nullnum += 1;
-		}
-		final Listener[] new_array = new Listener[listeners.length-nullnum];
-		int index_to = 0;
-		for(var e:old_array){
-			if(e != null)new_array[index_to++] = e;
-		}
-		return nullnum > 0;
+	private static <T, U> List<U> makeCache(Collection<T> container, Navigator<T,U> navigator){
+		return container.stream().map(x -> navigator.get(x).get()).collect(Collectors.toList());
 	}
 }
 

@@ -4,34 +4,32 @@ public class LinkableTypedPath<T, U> extends Readable<U>{
 
 	private U cache;
 
-	private Getter<T, U> getter;
+	private Navigator<T, U> navigator;
 
 	private Readable<T> from;
 
 	@Override
 	protected void action() {
-		cache = getter.get(from.get()).get();
-		setInputsInSecretly(from, getter.get(from.get()));
+		setInputsInSecretly(from, navigator.get(from.get()));
+		if(isReady()) {
+			cache = navigator.get(from.get()).get();
+		}
 	}
-
-	public interface Getter<T,U>{
-		 Readable<U> get(T from);
-	};
 
 	public LinkableTypedPath(){
 		super();
 	}
 
-	public LinkableTypedPath(Readable<T> from, Getter<T,U> getter){
-		set(from, getter);
+	public LinkableTypedPath(Readable<T> from, Navigator<T,U> navigator){
+		set(from, navigator);
 	}
 
-	public void set(Readable<T> from, Getter<T,U> getter){
+	public void set(Readable<T> from, Navigator<T,U> navigator){
 
 		this.from = from;
-		this.getter = getter;
-		cache = getter.get(from.get()).get();
-		launchUpdate(from, getter.get(from.get()));
+		this.navigator = navigator;
+		cache = navigator.get(from.get()).get();
+		launchUpdate(from, navigator.get(from.get()));
 	}
 
 	public U get() {
