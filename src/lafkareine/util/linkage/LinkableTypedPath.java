@@ -1,21 +1,40 @@
 package lafkareine.util.linkage;
 
-public class LinkableTypedPath<T, U> extends LinkablePath<ReadOnlyLinkable<T>, ReadOnlyLinkable<U>>{
+public class LinkableTypedPath<T, U> extends Readable<U>{
 
-	public interface Getter<T,U> extends LinkablePath.Getter<ReadOnlyLinkable<T>, ReadOnlyLinkable<U>>{
-		@Override
-		 default ReadOnlyLinkable<U> get(ReadOnlyLinkable<T> from){
-			return rip(from.get());
-		};
+	private U cache;
 
-		Linkable<U> rip(T from);
+	private Getter<T, U> getter;
+
+	private Readable<T> from;
+
+	@Override
+	protected void action() {
+		cache = getter.get(from.get()).get();
+		setInputsInSecretly(from, getter.get(from.get()));
 	}
 
-	public LinkableTypedPath(ReadOnlyLinkable<T> from, Getter<T,U> getter){
-		super(from, getter);
+	public interface Getter<T,U>{
+		 Readable<U> get(T from);
+	};
+
+	public LinkableTypedPath(){
+		super();
+	}
+
+	public LinkableTypedPath(Readable<T> from, Getter<T,U> getter){
+		set(from, getter);
+	}
+
+	public void set(Readable<T> from, Getter<T,U> getter){
+
+		this.from = from;
+		this.getter = getter;
+		cache = getter.get(from.get()).get();
+		launchUpdate(from, getter.get(from.get()));
 	}
 
 	public U get() {
-		return super.unwrap().get();
+		return cache;
 	}
 }

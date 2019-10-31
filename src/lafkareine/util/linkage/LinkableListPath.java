@@ -23,6 +23,8 @@ public class LinkableListPath<T, U extends LinkableBase> extends LinkableBase {
 
 	private ReadOnlyLinkable<List<T>> from;
 
+	private List<U> cache;
+
 	public LinkableListPath(ReadOnlyLinkable<List<T>> from, Getter<T,U> getter) {
 		set(from, getter);
 	}
@@ -30,7 +32,8 @@ public class LinkableListPath<T, U extends LinkableBase> extends LinkableBase {
 	public void set(ReadOnlyLinkable<List<T>> from, Getter<T,U> getter) {
 		this.from = from;
 		this.getter = getter;
-		launchUpdate(makeInputsArray(from, getter));}
+		launchUpdate(makeInputsArray(from, getter));
+	}
 
 	public void set(ReadOnlyLinkable<List<T>> from) {
 		this.from = from;
@@ -48,6 +51,7 @@ public class LinkableListPath<T, U extends LinkableBase> extends LinkableBase {
 	}
 
 	private void runListener(){
+
 		for(var e:listeners){
 			e.exchange();
 		}

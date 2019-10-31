@@ -14,30 +14,6 @@ public class Linkable<T> extends ReadOnlyLinkable<T>{
 	
 	private byte lazyflag;
 	
-	private BasicListener[] listeners = NOTHING_LISTENER;
-
-	private static final BasicListener[] NOTHING_LISTENER = new BasicListener[] {};
-	
-	public boolean removeListener(Object listener) {
-		if (listener == null)
-			return false;
-		int rmvnum = 0;
-		for (int i = 0; i < listeners.length; i++) {
-			if (listener.equals(listeners[i]) && i + ++rmvnum < listeners.length) {
-				listeners[i--] = listeners[rmvnum];
-			}
-		}
-		if (rmvnum == 0)
-			return false;
-		listeners = Arrays.copyOf(listeners, listeners.length - rmvnum);
-		return true;
-	}
-	
-	public BasicListener<? super T> addListener(BasicListener<? super T> listener) {
-		listeners = Arrays.copyOf(listeners, listeners.length + 1);
-		listeners[listeners.length - 1] = listener;
-		return listener;
-	}
 	/*
 	public BasicListener<? super T> addListener(NoArgListener<? super T> listener) {
 		return addListener((BasicListener<Object>) listener);
@@ -49,7 +25,7 @@ public class Linkable<T> extends ReadOnlyLinkable<T>{
 	*/
 
 	private void runningListener(T oldcache, BasicAction<T> oldaction, byte oldlazyflag) {
-		for (BasicListener<? super T> listener : listeners) {
+		for (BasicListener<? super T> listener : getListeners()) {
 			if (oldlazyflag == 2 && listener.requireOld()) {
 				oldcache = oldaction.action(oldcache);
 				oldlazyflag = 1;
@@ -314,15 +290,7 @@ public class Linkable<T> extends ReadOnlyLinkable<T>{
 		set(get());
 	}
 	
-	@Override
-	public void focus(Consumer<T> work) {
-		work.accept(get());
-	}
-	
-	@Override
-	public <U> U focus(Function<T, U> work) {
-		return work.apply(get());
-	}
+
 	
 	@Override
 	public Linkable<T> asWriteable() {
