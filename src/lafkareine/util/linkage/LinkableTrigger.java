@@ -24,5 +24,6 @@ public class LinkableTrigger extends Active{
 
 	public final void start(){
 		launchUpdate();
+		runReactor();
 	}
 }

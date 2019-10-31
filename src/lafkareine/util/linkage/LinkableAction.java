@@ -26,9 +26,9 @@ public class LinkableAction extends Active {
 		this(action, inferInputs(action));
 	}
 	
-	public LinkableAction(NoArgAction action, LinkableBase... dependers) {
+	public LinkableAction(NoArgAction action, LinkableBase... inputs) {
 		// TODO 自動生成されたコンストラクター・スタブ
-		p_set(action, dependers);
+		p_set(action, inputs);
 	}
 
 	public LinkableAction(ArgAction action) {
@@ -36,23 +36,23 @@ public class LinkableAction extends Active {
 		this(action, inferInputs(action));
 	}
 
-	public LinkableAction(ArgAction action, LinkableBase... dependers) {
+	public LinkableAction(ArgAction action, LinkableBase... inputs) {
 		// TODO 自動生成されたコンストラクター・スタブ
-		p_set(action, dependers);
+		p_set(action, inputs);
 	}
 	
 	public void set(NoArgAction action) {
 		p_set(action, inferInputs(action));
 	}
 	
-	public void set(NoArgAction action, LinkableBase... dependers) {
+	public void set(NoArgAction action, LinkableBase... inputs) {
 		// TODO 自動生成されたメソッド・スタブ
-		p_set(action, dependers);
+		p_set(action, inputs);
 	}
 
-	private void p_set(Action action, LinkableBase[] dependers){
+	private void p_set(Action action, LinkableBase[] inputs){
 		this.action = action;
-		launchUpdate(dependers);
+		launchUpdate(inputs);
 
 	}
 
@@ -60,11 +60,11 @@ public class LinkableAction extends Active {
 		p_set(action, inferInputs(action));
 	}
 
-	public void set(ArgAction action, LinkableBase... dependers) {
+	public void set(ArgAction action, LinkableBase... inputs) {
 		// TODO 自動生成されたメソッド・スタブ
-		p_set(action, dependers);
+		p_set(action, inputs);
 	}
-
+	
 	public LinkableAction() {
 		// TODO 自動生成されたコンストラクター・スタブ
 	}
@@ -73,5 +73,6 @@ public class LinkableAction extends Active {
 	protected void action() {
 		// TODO 自動生成されたメソッド・スタブ
 		action.act(this);
+		runReactor();
 	}
 }
