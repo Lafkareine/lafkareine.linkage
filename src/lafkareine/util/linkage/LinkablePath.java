@@ -1,76 +1,46 @@
 
 package lafkareine.util.linkage;
 
+import java.util.function.Function;
 
-import java.util.Arrays;
+public class LinkablePath<T extends  LinkableBase, U extends LinkableBase> extends Readable<U> {
 
-public class LinkablePath<T extends  LinkableBase, U extends LinkableBase> extends LinkableBase {
-	
-	public interface Getter<T extends LinkableBase, U extends  LinkableBase> {
-		U get(T from);
+	@Override
+	public final U get() {
+		return cache;
 	}
-
-	public interface Listener<U extends LinkableBase> {
-		void exchange (U from, U to);
-	}
-
-	private Listener<U>[] listeners = NOTHING_LISTENER;
-
-	private static final Listener[] NOTHING_LISTENER = new Listener[] {};
 
 	private U cache;
-	
-	private Getter<T, U> getter;
+
+	private Function<? super T, ? extends U> navigator;
 	
 	private T from;
-	
-	public LinkablePath(T from, Getter<T,U> getter) {
-		this.from = from;
-		this.getter = getter;
-		cache = getter.get(from);
-		launchUpdate(from, getter.get(from));
-	}
-	
-	public <T extends LinkableBase> void set(T from, Getter<T, U> getter) {
-		launchUpdate(from, getter.get(from));
-	}
 
-	public final U unwrap() {
-		return cache;
+	public LinkablePath(){
+		super();
+	}
+	
+	public LinkablePath(T from, Function<? super T, ? extends U> navigator) {
+		set(from, navigator);
+	}
+	
+	public void set(T from, Function<? super T, ? extends U> navigator) {
+		this.from = from;
+		this.navigator = navigator;
+		cache = navigator.apply(from);
+		launchUpdate(from, navigator.apply(from));
 	}
 
 	@Override
 	protected void action() {
+		U neocache = navigator.apply(from);
 		// TODO 自動生成されたメソッド・スタブ
-		U oldcache = cache;
-		cache = getter.get(from);
-		setInputsInSecretly(from, cache);
-	}
-
-	public final Listener<U> addListner(Listener<U> added){
-		if(added == null) return null;
-		final Listener<U>[] new_array = new Listener[listeners.length+1];
-		final Listener<U>[] old_array = listeners;
-		for(int i = 0; i < old_array.length; i++){
-			new_array[i] = old_array[i];
+		setInputsInSecretly(from, neocache);
+		if(isReady()){
+			U oldcache = cache;
+			cache = neocache;
+			defaultRunListner(oldcache, neocache);
 		}
-		new_array[old_array.length] = added;
-		return  added;
-	}
-
-	public final boolean removeListner(Listener<U> added){
-		final Listener<U>[] old_array = listeners;
-		int nullnum = 0;
-		for(int i = 0; i < old_array.length; i++){
-			if(old_array[i] == added)old_array[i] = null;
-			nullnum += 1;
-		}
-		final Listener<U>[] new_array = new Listener[listeners.length-nullnum];
-		int index_to = 0;
-		for(var e:old_array){
-			if(e != null)new_array[index_to++] = e;
-		}
-		return nullnum > 0;
 	}
 }
 

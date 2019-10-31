@@ -2,7 +2,7 @@
 package lafkareine.util.linkage;
 
 
-public class LinkableCensor extends LinkableBase {
+public class LinkableCensor extends LinkableBase{
 	
 	private boolean isActed = false;
 	

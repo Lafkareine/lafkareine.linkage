@@ -4,6 +4,7 @@ package lafkareine.util.linkage;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class LinkableListPath<T, U> extends Readable<List<U>> {
@@ -13,18 +14,9 @@ public class LinkableListPath<T, U> extends Readable<List<U>> {
 		return cache;
 	}
 
-	public interface Listener{
-		void exchange ();
-	}
+	private Function<? super T,? extends Readable<? extends U>> navigator;
 
-	private Listener[] listeners = NOTHING_LISTENER;
-
-	private static final Listener[] NOTHING_LISTENER = new Listener[] {};
-
-
-	private Navigator<T, U> navigator;
-
-	private Readable<Collection<T>> from;
+	private Readable<? extends Collection<? extends T>> from;
 
 	private List<U> cache;
 
@@ -32,11 +24,11 @@ public class LinkableListPath<T, U> extends Readable<List<U>> {
 		super();
 	}
 
-	public LinkableListPath(Readable<Collection<T>> from, Navigator<T,U> navigator) {
+	public LinkableListPath(Readable<? extends Collection<? extends T>> from, Function<? super T,? extends Readable<? extends U>> navigator) {
 		set(from, navigator);
 	}
 
-	public void set(Readable<Collection<T>> from, Navigator<T,U> navigator) {
+	public void set(Readable<? extends Collection<? extends T>> from, Function<? super T,? extends Readable<? extends U>> navigator) {
 		this.from = from;
 		this.navigator = navigator;
 		launchUpdate(makeInputsArray(from, navigator));
@@ -58,30 +50,26 @@ public class LinkableListPath<T, U> extends Readable<List<U>> {
 		if(isReady()){
 			List<U> oldcache = cache;
 			cache = makeCache(from.get(), navigator);
-			runListener(oldcache, cache);
+			defaultRunListner(oldcache, cache);
 		}
 	}
 
-	private void runListener(List<U> old, List<U> neo){
-		for(var e:getListeners()){
-			e.listen(old,neo);
-		}
-	}
-
-	private static <T, U> LinkableBase[] makeInputsArray(Readable<Collection<T>> from, Navigator<T,U> navigator){
-		final Collection<T> container = from.get();
+	private static <T, U> LinkableBase[] makeInputsArray(Readable<? extends Collection<? extends T>> from, Function<? super T,? extends Readable<? extends U>> navigator){
+		final Collection<? extends T> container = from.get();
 		LinkableBase[] parents = new LinkableBase[container.size()+1];
 		int i = 0;
 		for(var e:container){
-			parents[i++] = navigator.get(e);
+			parents[i++] = navigator.apply(e);
 		}
 		parents[i] = from;
 		return  parents;
 	}
 
-	private static <T, U> List<U> makeCache(Collection<T> container, Navigator<T,U> navigator){
-		return container.stream().map(x -> navigator.get(x).get()).collect(Collectors.toList());
+	private static <T, U> List<U> makeCache(Collection<? extends T> container, Function<? super T,? extends Readable<? extends U>> navigator){
+		return container.stream().map(x -> navigator.apply(x).get()).collect(Collectors.toList());
 	}
+
+
 }
 
 

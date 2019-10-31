@@ -81,9 +81,9 @@ public abstract class Readable<T> extends LinkableBase{
 	/**読み取れるんだからListenerが必要だろ、みたいな*/
 
 
-	private BasicListener[] listeners = NOTHING_LISTENER;
+	private BasicListener<? super T>[] listeners = NOTHING_LISTENER;
 
-	protected final BasicListener[] getListeners(){return  listeners;}
+	protected final BasicListener<? super T>[] getListeners(){return  listeners;}
 
 	private static final BasicListener[] NOTHING_LISTENER = new BasicListener[] {};
 
@@ -117,5 +117,11 @@ public abstract class Readable<T> extends LinkableBase{
 			return false;
 		listeners = Arrays.copyOf(listeners, listeners.length - rmvnum);
 		return true;
+	}
+
+	protected void defaultRunListner(T old, T neo){
+		for(var e:listeners){
+			e.listen(old,neo);
+		}
 	}
 }

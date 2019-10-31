@@ -2,7 +2,7 @@
 package lafkareine.util.linkage;
 
 
-public class LinkableAction extends LinkableBase {
+public class LinkableAction extends Active {
 	
 	private Action action;
 
@@ -64,7 +64,7 @@ public class LinkableAction extends LinkableBase {
 		// TODO 自動生成されたメソッド・スタブ
 		p_set(action, dependers);
 	}
-	
+
 	public LinkableAction() {
 		// TODO 自動生成されたコンストラクター・スタブ
 	}
