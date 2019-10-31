@@ -31,12 +31,14 @@ public class LinkableListPath<T, U> extends Readable<List<U>> {
 	public void set(Readable<? extends Collection<? extends T>> from, Function<? super T,? extends Readable<? extends U>> navigator) {
 		this.from = from;
 		this.navigator = navigator;
+		List<U> oldcache = cache;
+		cache = makeCache(from.get(),navigator);
 		launchUpdate(makeInputsArray(from, navigator));
+		defaultRunListner(oldcache,cache);
 	}
 
 	public void set(Readable<Collection<T>> from) {
-		this.from = from;
-		launchUpdate(makeInputsArray(from, navigator));
+		set(from,navigator);
 	}
 
 	public final U pick(int index){
@@ -65,7 +67,7 @@ public class LinkableListPath<T, U> extends Readable<List<U>> {
 		return  parents;
 	}
 
-	private static <T, U> List<U> makeCache(Collection<? extends T> container, Function<? super T,? extends Readable<? extends U>> navigator){
+	private static <T, U> List<U> makeCache(Collection<? extends T> container,Function<? super T,? extends Readable<? extends U>> navigator){
 		return container.stream().map(x -> navigator.apply(x).get()).collect(Collectors.toList());
 	}
 

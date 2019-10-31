@@ -27,8 +27,15 @@ public class LinkablePath<T extends  LinkableBase, U extends LinkableBase> exten
 	public void set(T from, Function<? super T, ? extends U> navigator) {
 		this.from = from;
 		this.navigator = navigator;
+		U oldcache = cache;
 		cache = navigator.apply(from);
 		launchUpdate(from, navigator.apply(from));
+		defaultRunListner(oldcache,cache);
+	}
+
+	public void set(T from) {
+		this.from = from;
+		set(from,navigator);
 	}
 
 	@Override

@@ -32,8 +32,15 @@ public class LinkableTypedPath<T, U> extends Readable<U>{
 	public void set(Readable<? extends T> from, Function<? super T,? extends Readable<U>> navigator){
 		this.from = from;
 		this.navigator = navigator;
+		U oldcache = cache;
 		cache = navigator.apply(from.get()).get();
 		launchUpdate(from, navigator.apply(from.get()));
+		defaultRunListner(oldcache,cache);
+	}
+
+	public void set(Readable<? extends T> from) {
+		this.from = from;
+		set(from,navigator);
 	}
 
 	public U get() {
