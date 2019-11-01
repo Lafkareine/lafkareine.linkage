@@ -10,10 +10,10 @@ public class LinkableTrigger extends Active{
 		launchUpdate();
 	}
 
-	public LinkableTrigger(LinkableBase... inputs) {
+	public LinkableTrigger(LinkableBase... concerns) {
 		// TODO 自動生成されたコンストラクター・スタブ
 		super();
-		launchUpdate(inputs);
+		launchUpdate(concerns);
 	}
 
 	@Override

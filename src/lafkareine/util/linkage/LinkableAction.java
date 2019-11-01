@@ -23,46 +23,46 @@ public class LinkableAction extends Active {
 
 	public LinkableAction(NoArgAction action) {
 		// TODO 自動生成されたコンストラクター・スタブ
-		this(action, inferInputs(action));
+		this(action, inferConcerns(action));
 	}
 	
-	public LinkableAction(NoArgAction action, LinkableBase... inputs) {
+	public LinkableAction(NoArgAction action, LinkableBase... concerns) {
 		// TODO 自動生成されたコンストラクター・スタブ
-		p_set(action, inputs);
+		p_set(action, concerns);
 	}
 
 	public LinkableAction(ArgAction action) {
 		// TODO 自動生成されたコンストラクター・スタブ
-		this(action, inferInputs(action));
+		this(action, inferConcerns(action));
 	}
 
-	public LinkableAction(ArgAction action, LinkableBase... inputs) {
+	public LinkableAction(ArgAction action, LinkableBase... concerns) {
 		// TODO 自動生成されたコンストラクター・スタブ
-		p_set(action, inputs);
+		p_set(action, concerns);
 	}
 	
 	public void set(NoArgAction action) {
-		p_set(action, inferInputs(action));
+		p_set(action, inferConcerns(action));
 	}
 	
-	public void set(NoArgAction action, LinkableBase... inputs) {
+	public void set(NoArgAction action, LinkableBase... concerns) {
 		// TODO 自動生成されたメソッド・スタブ
-		p_set(action, inputs);
+		p_set(action, concerns);
 	}
 
-	private void p_set(Action action, LinkableBase[] inputs){
+	private void p_set(Action action, LinkableBase[] concerns){
 		this.action = action;
-		launchUpdate(inputs);
+		launchUpdate(concerns);
 
 	}
 
 	public void set(ArgAction action) {
-		p_set(action, inferInputs(action));
+		p_set(action, inferConcerns(action));
 	}
 
-	public void set(ArgAction action, LinkableBase... inputs) {
+	public void set(ArgAction action, LinkableBase... concerns) {
 		// TODO 自動生成されたメソッド・スタブ
-		p_set(action, inputs);
+		p_set(action, concerns);
 	}
 	
 	public LinkableAction() {

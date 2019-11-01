@@ -6,14 +6,14 @@ public class LinkableCensor extends LinkableBase{
 	
 	private boolean isActed = false;
 	
-	public LinkableCensor(LinkableBase... target) {
+	public LinkableCensor(LinkableBase... concern) {
 		// TODO 自動生成されたコンストラクター・スタブ
-		launchUpdate(target);
+		launchUpdate(concern);
 	}
 	
-	public void setTarget(LinkableBase... target) {
+	public void setTarget(LinkableBase... concern) {
 		isActed = true;
-		launchUpdate(target);
+		launchUpdate(concern);
 	}
 	
 	@Override

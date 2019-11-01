@@ -15,11 +15,11 @@ public abstract class LinkableBase {
 	private WeakReference<LinkableBase> weakref = new WeakReference<>(this);
 	private static final WeakReference<LinkableBase> nullref = new WeakReference<>(null);
 	private Object operation_slot;
-	private LinkableBase[] inputs = BEFORE_INITIALIZING;
+	private LinkableBase[] concerns = BEFORE_INITIALIZING;
 	private static final LinkableBase[] BEFORE_INITIALIZING = new LinkableBase[]{};
-	private static final LinkableBase[] NOTHING_INPUTS = new LinkableBase[]{};
-	private WeakReference<LinkableBase>[] outputs = NOTHING_OUTPUTS;
-	private static final WeakReference<LinkableBase>[] NOTHING_OUTPUTS = new WeakReference[]{};
+	private static final LinkableBase[] NOTHING_CONCERNS = new LinkableBase[]{};
+	private WeakReference<LinkableBase>[] observers = NOTHING_OBSERVERS;
+	private static final WeakReference<LinkableBase>[] NOTHING_OBSERVERS = new WeakReference[]{};
 
 	public final boolean isReady() {
 		return 0 == mark;
@@ -33,12 +33,12 @@ public abstract class LinkableBase {
 	}
 
 
-	private enum SEND_MESSAGE {DIFFER, READY, CANCEL}
+	private enum NOTIFICATION {DIFFER, READY, CANCEL}
 
-	private void send_outputs(SEND_MESSAGE message) {
-		var ol = outputs;
-		outputs = NOTHING_OUTPUTS;
-		switch (message) {
+	private void send_observers(NOTIFICATION notification) {
+		var ol = observers;
+		observers = NOTHING_OBSERVERS;
+		switch (notification) {
 			case DIFFER:
 				s_send_differ(ol);
 				break;
@@ -51,44 +51,44 @@ public abstract class LinkableBase {
 			default:
 				throw new IllegalArgumentException();
 		}
-		if (outputs == NOTHING_OUTPUTS) {
-			ol = optimize_output_array(ol, outputs.length);
+		if (observers == NOTHING_OBSERVERS) {
+			ol = optimize_observers(ol, observers.length);
 			int index_to = 0;
-			for (var e : outputs) {
+			for (var e : observers) {
 				ol[index_to++] = e;
 			}
 		}
-		outputs = ol;
+		observers = ol;
 	}
 
 	private void send_differ() {
-		send_outputs(SEND_MESSAGE.DIFFER);
+		send_observers(NOTIFICATION.DIFFER);
 	}
 
 	private void send_ready() {
-		send_outputs(SEND_MESSAGE.READY);
+		send_observers(NOTIFICATION.READY);
 	}
 
 	private void send_cancel() {
-		send_outputs(SEND_MESSAGE.CANCEL);
+		send_observers(NOTIFICATION.CANCEL);
 	}
 
-	private static void s_send_differ(WeakReference<LinkableBase>[] outputs) {
-		for (var e : outputs) {
+	private static void s_send_differ(WeakReference<LinkableBase>[] observers) {
+		for (var e : observers) {
 			var to = e.get();
 			if (to != null) to.receive_differ();
 		}
 	}
 
-	private static void s_send_ready(WeakReference<LinkableBase>[] outputs) {
-		for (var e : outputs) {
+	private static void s_send_ready(WeakReference<LinkableBase>[] observers) {
+		for (var e : observers) {
 			var to = e.get();
 			if (to != null) to.receive_ready();
 		}
 	}
 
-	private static void s_send_cancel(WeakReference<LinkableBase>[] outputs) {
-		for (var e : outputs) {
+	private static void s_send_cancel(WeakReference<LinkableBase>[] observers) {
+		for (var e : observers) {
 			var to = e.get();
 			if (to != null) to.receive_cancel();
 		}
@@ -150,12 +150,12 @@ public abstract class LinkableBase {
 	}
 
 
-	protected final void launchUpdate(LinkableBase... new_inputs) {
+	protected final void launchUpdate(LinkableBase... new_concerns) {
 		assert (!(mark == Integer.MAX_VALUE || mark == Integer.MIN_VALUE)) : "it is refresh-event now, the operation can't call in refresh-event";
 
 		boolean before_ready = isReady();
 
-		swapInputs(new_inputs);
+		swapConcerns(new_concerns);
 		if (before_ready) {
 			send_differ();
 		}
@@ -165,10 +165,10 @@ public abstract class LinkableBase {
 	}
 
 	protected final void launchUpdate() {
-		launchUpdate(NOTHING_INPUTS);
+		launchUpdate(NOTHING_CONCERNS);
 	}
 
-	public final void setInputsInSecretly(LinkableBase... new_inputs) {
+	public final void setConcernsInSecretly(LinkableBase... new_concerns) {
 		assert (mark != Integer.MIN_VALUE) : "the accepting was canceled, the operation cause a risk to brake integrity";
 		assert (mark == Integer.MAX_VALUE) : "it is not refresh-event now, the operation can call in refresh-event only";
 
@@ -176,26 +176,26 @@ public abstract class LinkableBase {
 		weakref.clear();
 		weakref = new WeakReference<>(this);
 
-		swapInputs(new_inputs);
+		swapConcerns(new_concerns);
 	}
 
-	private void swapInputs(LinkableBase[] new_inputs) {
-		for (var e : inputs) {
-			e.remove_output(this.weakref);
+	private void swapConcerns(LinkableBase[] new_concerns) {
+		for (var e : concerns) {
+			e.remove_observer(this.weakref);
 		}
-		if (new_inputs == BEFORE_INITIALIZING) {
+		if (new_concerns == BEFORE_INITIALIZING) {
 			mark = 1;
-			inputs = BEFORE_INITIALIZING;
+			concerns = BEFORE_INITIALIZING;
 		} else {
 			mark = 0;
-			var opt_inputs = optimize_inputs(new_inputs);
-			for (var e : opt_inputs) {
-				e.add_output(this.weakref);
+			var opt_concerns = optimize_concerns(new_concerns);
+			for (var e : opt_concerns) {
+				e.add_observer(this.weakref);
 				if (!e.isReady()) {
 					mark += 1;
 				}
 			}
-			inputs = opt_inputs;
+			concerns = opt_concerns;
 		}
 	}
 
@@ -209,19 +209,19 @@ public abstract class LinkableBase {
 		}
 	}
 
-	private void add_output(WeakReference<LinkableBase> addthing) {
-		outputs = optimize_output_array(outputs, 1);
-		outputs[0] = addthing;
+	private void add_observer(WeakReference<LinkableBase> addthing) {
+		observers = optimize_observers(observers, 1);
+		observers[0] = addthing;
 	}
 
-	private void remove_output(WeakReference<LinkableBase> remove_thing) {
-		for (int i = 0; i < outputs.length; i++) {
-			if (outputs[i] == remove_thing) outputs[i] = nullref;
+	private void remove_observer(WeakReference<LinkableBase> remove_thing) {
+		for (int i = 0; i < observers.length; i++) {
+			if (observers[i] == remove_thing) observers[i] = nullref;
 		}
-		outputs = optimize_output_array(outputs, 0);
+		observers = optimize_observers(observers, 0);
 	}
 
-	private static WeakReference<LinkableBase>[] optimize_output_array(WeakReference<LinkableBase>[] old_array, int extra_space) {
+	private static WeakReference<LinkableBase>[] optimize_observers(WeakReference<LinkableBase>[] old_array, int extra_space) {
 		int retain_num = 0;
 		for (var e : old_array) {
 			if (e.get() != null) retain_num += 1;
@@ -239,19 +239,19 @@ public abstract class LinkableBase {
 		}
 	}
 
-	private static LinkableBase[] optimize_inputs(LinkableBase[] raw_inputs) {
-		if(raw_inputs.length == 0)return  raw_inputs;
+	private static LinkableBase[] optimize_concerns(LinkableBase[] raw_concerns) {
+		if(raw_concerns.length == 0)return  raw_concerns;
 		int nullnum = 0;
 		//nullになっている奴をはじく
 		//重複があった場合は、ひとつだけを残してあと全部nullにする
-		for (int i = raw_inputs.length - 1; i > 0; i--) {
-			LinkableBase slot = raw_inputs[i];
+		for (int i = raw_concerns.length - 1; i > 0; i--) {
+			LinkableBase slot = raw_concerns[i];
 			if (slot == null) {
 				nullnum += 1;
 			} else {
 				for (int j = 0; j < i; j++) {
-					if (raw_inputs[j] == slot) {
-						raw_inputs[i] = null;
+					if (raw_concerns[j] == slot) {
+						raw_concerns[i] = null;
 						nullnum += 1;
 						break;
 					}
@@ -259,18 +259,18 @@ public abstract class LinkableBase {
 			}
 		}
 		if (nullnum == 0) {
-			return raw_inputs;
+			return raw_concerns;
 		} else {
-			LinkableBase[] optimized_inputs = new LinkableBase[raw_inputs.length - nullnum];
+			LinkableBase[] optimized_concerns = new LinkableBase[raw_concerns.length - nullnum];
 			int index_to = 0;
-			for (var e : raw_inputs) {
-				optimized_inputs[index_to++] = e;
+			for (var e : raw_concerns) {
+				optimized_concerns[index_to++] = e;
 			}
-			return optimized_inputs;
+			return optimized_concerns;
 		}
 	}
 
-	protected static LinkableBase[] inferInputs(Object worker) {
+	protected static LinkableBase[] inferConcerns(Object worker) {
 		if (worker != null) {
 			Class evalclass = worker.getClass();
 			try {

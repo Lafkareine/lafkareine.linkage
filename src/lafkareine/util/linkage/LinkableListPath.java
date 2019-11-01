@@ -48,7 +48,7 @@ public class LinkableListPath<T, U> extends Readable<List<U>> {
 	@Override
 	protected void action() {
 		// TODO 自動生成されたメソッド・スタブ
-		setInputsInSecretly(makeInputsArray(from, navigator));
+		setConcernsInSecretly(makeInputsArray(from, navigator));
 		if(isReady()){
 			List<U> oldcache = cache;
 			cache = makeCache(from.get(), navigator);

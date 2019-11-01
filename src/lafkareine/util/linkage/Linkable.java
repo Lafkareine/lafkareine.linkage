@@ -2,9 +2,7 @@
 package lafkareine.util.linkage;
 
 
-import java.util.Arrays;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 
@@ -74,19 +72,19 @@ public class Linkable<T> extends ReadOnlyLinkable<T>{
 		set(value);
 	}
 	
-	public Linkable(T init, BasicAction<T> evalater, LinkableBase... inputs) {
+	public Linkable(T init, BasicAction<T> evalater, LinkableBase... concerns) {
 		// TODO 自動生成されたコンストラクター・スタブ
-		set(init, evalater, inputs);
+		set(init, evalater, concerns);
 	}
 	
-	public Linkable(NoArgAction<T> evalater, LinkableBase... inputs) {
+	public Linkable(NoArgAction<T> evalater, LinkableBase... concerns) {
 		// TODO 自動生成されたコンストラクター・スタブ
-		set(evalater, inputs);
+		set(evalater, concerns);
 	}
 	
-	public Linkable(T init, NoRetAction<T> evalater, LinkableBase... inputs) {
+	public Linkable(T init, NoRetAction<T> evalater, LinkableBase... concerns) {
 		// TODO 自動生成されたコンストラクター・スタブ
-		set(init, evalater, inputs);
+		set(init, evalater, concerns);
 	}
 	
 	public Linkable(T init, BasicAction<T> evalater) {
@@ -104,23 +102,23 @@ public class Linkable<T> extends ReadOnlyLinkable<T>{
 		set(init, evalater);
 	}
 	
-	public Linkable(T init, BasicAction<T> evalater, LazyOption option, LinkableBase... inputs) {
+	public Linkable(T init, BasicAction<T> evalater, LazyOption option, LinkableBase... concerns) {
 		// TODO 自動生成されたコンストラクター・スタブ
 		/** Impulsive Killer Jack The Ripper
 		 *
 		 */
 
-		set(init, evalater, option, inputs);
+		set(init, evalater, option, concerns);
 	}
 	
-	public Linkable(NoArgAction<T> evalater, LazyOption option, LinkableBase... inputs) {
+	public Linkable(NoArgAction<T> evalater, LazyOption option, LinkableBase... concerns) {
 		// TODO 自動生成されたコンストラクター・スタブ
-		set(evalater, option, inputs);
+		set(evalater, option, concerns);
 	}
 	
-	public Linkable(T init, NoRetAction<T> evalater, LazyOption option, LinkableBase... inputs) {
+	public Linkable(T init, NoRetAction<T> evalater, LazyOption option, LinkableBase... concerns) {
 		// TODO 自動生成されたコンストラクター・スタブ
-		set(init, evalater, option, inputs);
+		set(init, evalater, option, concerns);
 	}
 	
 	public Linkable(T init, BasicAction<T> evalater, LazyOption option) {
@@ -139,41 +137,41 @@ public class Linkable<T> extends ReadOnlyLinkable<T>{
 	}
 	
 	
-	public void set(T init, BasicAction<T> evalater, LinkableBase... inputs) {
-		set(init, evalater, LazyOption.QUICK, inputs);
+	public void set(T init, BasicAction<T> evalater, LinkableBase... concerns) {
+		set(init, evalater, LazyOption.QUICK, concerns);
 	}
 	
-	public void set(NoArgAction<T> evalater, LinkableBase... inputs) {
-		set(evalater, LazyOption.QUICK, inputs);
+	public void set(NoArgAction<T> evalater, LinkableBase... concerns) {
+		set(evalater, LazyOption.QUICK, concerns);
 	}
 	
-	public void set(T init, NoRetAction<T> evalater, LinkableBase... inputs) {
-		set(init, evalater, LazyOption.QUICK, inputs);
+	public void set(T init, NoRetAction<T> evalater, LinkableBase... concerns) {
+		set(init, evalater, LazyOption.QUICK, concerns);
 	}
 	
 	/** @param evalater
 	 */
 	public void set(T init, BasicAction<T> evalater) {
-		set(init, evalater, LazyOption.QUICK, inferInputs(evalater));
+		set(init, evalater, LazyOption.QUICK, inferConcerns(evalater));
 	}
 	
 	public void set(NoArgAction<T> evalater) {
-		set(evalater, LazyOption.QUICK, inferInputs(evalater));
+		set(evalater, LazyOption.QUICK, inferConcerns(evalater));
 	}
 	
 	public void set(T init, NoRetAction<T> evalater) {
-		set(init, evalater, LazyOption.QUICK, inferInputs(evalater));
+		set(init, evalater, LazyOption.QUICK, inferConcerns(evalater));
 	}
 	
 	
 	//setWithOption
-	public void set(T init, BasicAction<T> evalater, LazyOption option, LinkableBase... inputs) {
+	public void set(T init, BasicAction<T> evalater, LazyOption option, LinkableBase... concerns) {
 		T oldcache = cache;
 		BasicAction<T> oldaction = evalater;
 		byte oldlazyflag = lazyflag;
 		
 		this.evalater = evalater;
-		if (inputs == null) {
+		if (concerns == null) {
 			cache = null;
 		}
 		if (option == LazyOption.QUICK) {
@@ -183,59 +181,59 @@ public class Linkable<T> extends ReadOnlyLinkable<T>{
 			lazyflag = 2;
 			cache = init;
 		}
-		launchUpdate(inputs);
+		launchUpdate(concerns);
 		
 		runningListener(oldcache, oldaction, oldlazyflag);
 	}
 	
-	public void set(NoArgAction<T> evalater, LazyOption option, LinkableBase... inputs) {
-		set(null, evalater, option, inputs);
+	public void set(NoArgAction<T> evalater, LazyOption option, LinkableBase... concerns) {
+		set(null, evalater, option, concerns);
 	}
 	
-	public void set(T init, NoRetAction<T> evalater, LazyOption option, LinkableBase... inputs) {
-		set(init, (BasicAction<T>) evalater, option, inputs);
+	public void set(T init, NoRetAction<T> evalater, LazyOption option, LinkableBase... concerns) {
+		set(init, (BasicAction<T>) evalater, option, concerns);
 	}
 	
 	/** @param evalater
 	 */
 	public void set(T init, BasicAction<T> evalater, LazyOption option) {
-		set(init, evalater, option, inferInputs(evalater));
+		set(init, evalater, option, inferConcerns(evalater));
 	}
 	
 	public void set(NoArgAction<T> evalater, LazyOption option) {
-		set(evalater, option, inferInputs(evalater));
+		set(evalater, option, inferConcerns(evalater));
 	}
 	
 	public void set(T init, NoRetAction<T> evalater, LazyOption option) {
-		set(init, evalater, option, inferInputs(evalater));
+		set(init, evalater, option, inferConcerns(evalater));
 	}
 	
 	//setInLazy
 	
-	public void setInLazy(T init, BasicAction<T> evalater, LinkableBase... inputs) {
-		set(init, evalater, LazyOption.LAZY, inputs);
+	public void setInLazy(T init, BasicAction<T> evalater, LinkableBase... concerns) {
+		set(init, evalater, LazyOption.LAZY, concerns);
 	}
 	
-	public void setInLazy(NoArgAction<T> evalater, LinkableBase... inputs) {
-		set(evalater, LazyOption.LAZY, inputs);
+	public void setInLazy(NoArgAction<T> evalater, LinkableBase... concerns) {
+		set(evalater, LazyOption.LAZY, concerns);
 	}
 	
-	public void setInLazy(T init, NoRetAction<T> evalater, LinkableBase... inputs) {
-		set(init, evalater, LazyOption.LAZY, inputs);
+	public void setInLazy(T init, NoRetAction<T> evalater, LinkableBase... concerns) {
+		set(init, evalater, LazyOption.LAZY, concerns);
 	}
 	
 	/** @param evalater
 	 */
 	public void setInLazy(T init, BasicAction<T> evalater) {
-		set(init, evalater, LazyOption.LAZY, inferInputs(evalater));
+		set(init, evalater, LazyOption.LAZY, inferConcerns(evalater));
 	}
 	
 	public void setInLazy(NoArgAction<T> evalater) {
-		set(evalater, LazyOption.LAZY, inferInputs(evalater));
+		set(evalater, LazyOption.LAZY, inferConcerns(evalater));
 	}
 	
 	public void setInLazy(T init, NoRetAction<T> evalater) {
-		set(init, evalater, LazyOption.LAZY, inferInputs(evalater));
+		set(init, evalater, LazyOption.LAZY, inferConcerns(evalater));
 	}
 	
 	private T cache;

@@ -42,7 +42,7 @@ public class LinkablePath<T extends  LinkableBase, U extends LinkableBase> exten
 	protected void action() {
 		U neocache = navigator.apply(from);
 		// TODO 自動生成されたメソッド・スタブ
-		setInputsInSecretly(from, neocache);
+		setConcernsInSecretly(from, neocache);
 		if(isReady()){
 			U oldcache = cache;
 			cache = neocache;

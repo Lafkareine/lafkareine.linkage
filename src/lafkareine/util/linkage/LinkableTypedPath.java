@@ -14,7 +14,7 @@ public class LinkableTypedPath<T, U> extends Readable<U>{
 	protected void action() {
 		U oldcache = cache;
 		Readable<U> target = navigator.apply(from.get());
-		setInputsInSecretly(from, target);
+		setConcernsInSecretly(from, target);
 		if(isReady()) {
 			cache = target.get();
 			defaultRunListner(oldcache,cache);

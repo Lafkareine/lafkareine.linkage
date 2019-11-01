@@ -48,7 +48,7 @@ public class LinkablePathList<T extends  LinkableBase, U extends LinkableBase> e
 	protected void action() {
 		List<U> neocache = navigator.apply(from);
 		// TODO 自動生成されたメソッド・スタブ
-		setInputsInSecretly(makeInputArray(from,neocache));
+		setConcernsInSecretly(makeInputArray(from,neocache));
 		if(isReady()){
 			List<U> oldcache = cache;
 			cache = neocache;
