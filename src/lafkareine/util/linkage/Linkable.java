@@ -2,10 +2,6 @@
 package lafkareine.util.linkage;
 
 
-import lafkareine.util.linkage.evalator.BasicAction;
-import lafkareine.util.linkage.evalator.NoArgAction;
-import lafkareine.util.linkage.evalator.NoRetAction;
-
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 
