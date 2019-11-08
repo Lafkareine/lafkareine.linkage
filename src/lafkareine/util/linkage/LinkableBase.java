@@ -6,9 +6,8 @@ import java.lang.reflect.Field;
 public abstract class LinkableBase {
 
 	/**
-	 * 新しい規格
 	 * 「キャンセルの可能性があるひずみがある」 →　負の数
-	 * 「確実に再計算が(親の辺奥が確定している)必要なひずみがある」 →　正の数
+	 * 「確実に再計算が必要な(親の変更が確定している)ひずみがある」 →　正の数
 	 * 「ひずみがない」　→　0
 	 */
 	private int mark = 1;
@@ -21,8 +20,14 @@ public abstract class LinkableBase {
 	private WeakReference<LinkableBase>[] observers = NOTHING_OBSERVERS;
 	private static final WeakReference<LinkableBase>[] NOTHING_OBSERVERS = new WeakReference[]{};
 
-	public final boolean isReady() {
-		return 0 == mark;
+
+
+	protected final boolean isReadyToAction() {
+		return (mark == 0) || (mark == Integer.MAX_VALUE) || (mark == Integer.MIN_VALUE);
+	}
+
+	public final boolean isReady(){
+		return mark == 0;
 	}
 
 	protected abstract void action();
@@ -153,12 +158,12 @@ public abstract class LinkableBase {
 	protected final void launchUpdate(LinkableBase... new_concerns) {
 		assert (!(mark == Integer.MAX_VALUE || mark == Integer.MIN_VALUE)) : "it is refresh-event now, the operation can't call in refresh-event";
 
-		boolean before_ready = isReady();
-
-		swapConcerns(new_concerns);
-		if (before_ready) {
+		if (isReady()) {
 			send_differ();
 		}
+
+		swapConcerns(new_concerns);
+
 		if (isReady()) {
 			send_ready();
 		}
@@ -167,15 +172,46 @@ public abstract class LinkableBase {
 	protected final void launchUpdate() {
 		launchUpdate(NOTHING_CONCERNS);
 	}
+	protected final void launchFirstAction(){launchFirstAction(NOTHING_CONCERNS);}
+
+	protected final void launchFirstAction(LinkableBase... new_concerns){
+
+		assert (!(mark == Integer.MAX_VALUE || mark == Integer.MIN_VALUE)) : "it is refresh-event now, the operation can't call in refresh-event";
+
+		if(isReady())send_differ();
+
+		for (var e : concerns) {
+			e.remove_observer(this.weakref);
+		}
+		concerns = BEFORE_INITIALIZING;
+		boolean ready = true;
+		check:
+		for(var e : new_concerns){
+			if(!e.isReady()){
+				ready = false;
+				break check;
+			}
+		}
+
+		if(ready) {
+			mark = Integer.MAX_VALUE;
+			action();
+		}
+		if(concerns == BEFORE_INITIALIZING) swapConcerns(new_concerns);
+		if (isReadyToAction()) {
+				mark = 0;
+				send_ready();
+		}
+	}
 
 	public final void setConcernsInSecretly(LinkableBase... new_concerns) {
-		assert (mark != Integer.MIN_VALUE) : "the accepting was canceled, the operation cause a risk to brake integrity";
+		// assert (mark != Integer.MIN_VALUE) : "the accepting was canceled, the operation cause a risk to brake integrity";
 		assert (mark == Integer.MAX_VALUE) : "it is not refresh-event now, the operation can call in refresh-event only";
 
-
-		weakref.clear();
-		weakref = new WeakReference<>(this);
-
+		if(concerns.length != 0) {
+			weakref.clear();
+			weakref = new WeakReference<>(this);
+		}
 		swapConcerns(new_concerns);
 	}
 

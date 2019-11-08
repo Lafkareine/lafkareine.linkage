@@ -2,48 +2,57 @@ package lafkareine.util.linkage;
 
 import java.util.function.Function;
 
-public class LinkableTypedPath<T, U> extends Readable<U>{
+public class LinkableTypedPath<T, U> extends Listenable<U> {
 
 	private U cache;
 
-	private Function<? super T, ? extends Readable<U>> navigator;
+	private Function<? super T, ? extends Listenable<U>> navigator;
 
-	private Readable<? extends T> from;
+	private Listenable<? extends T> from;
 
 	@Override
 	protected void action() {
-		U oldcache = cache;
-		Readable<U> target = navigator.apply(from.get());
-		setConcernsInSecretly(from, target);
-		if(isReady()) {
-			cache = target.get();
-			defaultRunListner(oldcache,cache);
-		}
+		concern(false);
 	}
 
 	public LinkableTypedPath(){
 		super();
 	}
 
-	public LinkableTypedPath(Readable<? extends T> from, Function<? super T,? extends Readable<U>> navigator){
+	public LinkableTypedPath(Listenable<? extends T> from, Function<? super T,? extends Listenable<U>> navigator){
 		set(from, navigator);
 	}
 
-	public void set(Readable<? extends T> from, Function<? super T,? extends Readable<U>> navigator){
+	public void set(Listenable<? extends T> from, Function<? super T,? extends Listenable<U>> navigator){
 		this.from = from;
 		this.navigator = navigator;
-		U oldcache = cache;
-		cache = navigator.apply(from.get()).get();
-		launchUpdate(from, navigator.apply(from.get()));
-		defaultRunListner(oldcache,cache);
+		if(from.isReady()){
+			concern(true);
+		}else {
+			launchUpdate(from);
+		}
 	}
 
-	public void set(Readable<? extends T> from) {
+	private void concern(boolean update){
+		U oldcache = cache;
+		Listenable<U> target = navigator.apply(from.get());
+		if(update){
+			launchUpdate(from,target);
+		}else{
+			setConcernsInSecretly(from, target);
+		}
+		if(isReadyToAction()) {
+			cache = target.get();
+			defaultRunListner(oldcache,cache);
+		}
+	}
+
+	public void set(Listenable<? extends T> from) {
 		this.from = from;
 		set(from,navigator);
 	}
 
-	public U get() {
+	public U get(AutoGuaranteed guaranteed) {
 		return cache;
 	}
 }

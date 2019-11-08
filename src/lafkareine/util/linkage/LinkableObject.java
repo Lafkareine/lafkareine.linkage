@@ -4,7 +4,14 @@ public abstract class LinkableObject extends LinkableBase{
 
 	public LinkableObject(LinkableBase... concerns){
 		super();
-		action();
-		launchUpdate(concerns);
+		setConcerns(concerns);
+	}
+
+	public LinkableObject(){
+		super();
+	}
+
+	public final void setConcerns(LinkableBase... concerns){
+		launchFirstAction(concerns);
 	}
 }

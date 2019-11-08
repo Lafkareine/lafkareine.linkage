@@ -25,7 +25,7 @@ public abstract class Active extends LinkableBase{
 		this.reactors = Arrays.copyOf(reactors, reactors.length-1);
 	}
 
-	public final void runReactor(){
+	protected final void runReactor(){
 		for(var e:reactors){
 			e.react();
 		}

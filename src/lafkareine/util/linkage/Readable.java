@@ -1,14 +1,18 @@
 package lafkareine.util.linkage;
 
-import java.util.Arrays;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public abstract class Readable<T> extends LinkableBase{
-
+public abstract class Readable<T> extends LinkableBase {
 	/**このLinkableが持つ状態を読み取ります
+	 * もしisReadyがfalseだった場合、自動的にIllegalStateExceptionが呼び出されます
 	 * */
-	public abstract T get();
+	public final T get(){
+		if(!isReady()) throw new IllegalStateException("It's unready now");
+		return get(AutoGuaranteed.READY);
+	}
+
+	protected abstract T get(AutoGuaranteed guaranteed);
 
 	/** get()で得られるものを引数のConsumerに渡します
 	 * この要素に集中した処理を行いたいときに有用です
@@ -24,104 +28,7 @@ public abstract class Readable<T> extends LinkableBase{
 		return work.apply(get());
 	}
 
-
-
-	public interface BasicListener<T> {
-
-		void listen(T old, T latest);
-
-		default boolean requireLatest() {
-			return true;
-		}
-
-		default boolean requireOld() {
-			return true;
-		}
-	}
-
-	public interface NoOldListener<T> extends BasicListener<T> {
-
-		@Override
-		default void listen(T old, T latest) {
-			// TODO 自動生成されたメソッド・スタブ
-			listen(latest);
-		}
-
-		void listen(T latest);
-
-		@Override
-		default boolean requireOld() {
-			return false;
-		}
-	}
-
-	public interface NoArgListener<T> extends BasicListener<T> {
-
-		@Override
-		default void listen(T old, T latest) {
-			// TODO 自動生成されたメソッド・スタブ
-			listen();
-		}
-
-		void listen();
-
-		@Override
-		default boolean requireLatest() {
-			// TODO 自動生成されたメソッド・スタブ
-			return false;
-		}
-
-		@Override
-		default boolean requireOld() {
-			return false;
-		}
-	}
-
-
-	/**読み取れるんだからListenerが必要だろ、みたいな*/
-
-
-	private BasicListener<? super T>[] listeners = NOTHING_LISTENER;
-
-	protected final BasicListener<? super T>[] getListeners(){return  listeners;}
-
-	private static final BasicListener[] NOTHING_LISTENER = new BasicListener[] {};
-
-
-	public BasicListener<? super T> addListener(BasicListener<? super T> listener) {
-		listeners = Arrays.copyOf(listeners, listeners.length + 1);
-		listeners[listeners.length - 1] = listener;
-		return listener;
-	}
-
-	public final BasicListener<? super T> addListener(NoArgListener<? super T> listener){
-		return  addListener(listener);
-	};
-
-	public final BasicListener<? super T> addListener(NoOldListener<? super T> listener){
-		return  addListener(listener);
-	};
-
-
-
-	public boolean removeListener(Object listener) {
-		if (listener == null)
-			return false;
-		int rmvnum = 0;
-		for (int i = 0; i < listeners.length; i++) {
-			if (listener.equals(listeners[i]) && i + ++rmvnum < listeners.length) {
-				listeners[i--] = listeners[rmvnum];
-			}
-		}
-		if (rmvnum == 0)
-			return false;
-		listeners = Arrays.copyOf(listeners, listeners.length - rmvnum);
-		return true;
-	}
-
-	protected void defaultRunListner(T old, T neo){
-		for(var e:listeners){
-			e.listen(old,neo);
-		}
+	enum AutoGuaranteed{
+		READY
 	}
 }

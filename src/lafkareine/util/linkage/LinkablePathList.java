@@ -4,10 +4,10 @@ package lafkareine.util.linkage;
 import java.util.List;
 import java.util.function.Function;
 
-public class LinkablePathList<T extends  LinkableBase, U extends LinkableBase> extends Readable<List<U>> {
+public class LinkablePathList<T extends  LinkableBase, U extends LinkableBase> extends Listenable<List<U>> {
 
 	@Override
-	public final List<U> get() {
+	public final List<U> get(AutoGuaranteed guaranteed) {
 		return cache;
 	}
 
@@ -17,28 +17,29 @@ public class LinkablePathList<T extends  LinkableBase, U extends LinkableBase> e
 
 	private T from;
 
-	public LinkablePathList(){
+	public LinkablePathList() {
 		super();
 	}
 
 	public LinkablePathList(T from, Function<? super T, ? extends List<U>> navigator) {
 		set(from, navigator);
 	}
-	
+
 	public void set(T from, Function<? super T, ? extends List<U>> navigator) {
 		this.from = from;
 		this.navigator = navigator;
-		List<U> oldcache = cache;
-		cache = navigator.apply(from);
-		launchUpdate(makeInputArray(from, cache));
-		defaultRunListner(oldcache,cache);
+		if(from.isReady()) {
+			concern(true);
+		}else {
+			launchUpdate(from);
+		}
 	}
 
-	private static LinkableBase[] makeInputArray(LinkableBase from, List<? extends LinkableBase> path){
-		LinkableBase[] inputs = new LinkableBase[path.size()+1];
+	private static LinkableBase[] makeInputArray(LinkableBase from, List<? extends LinkableBase> path) {
+		LinkableBase[] inputs = new LinkableBase[path.size() + 1];
 		int i = 0;
 		inputs[i++] = from;
-		for(var e : path){
+		for (var e : path) {
 			inputs[i++] = e;
 		}
 		return inputs;
@@ -46,10 +47,19 @@ public class LinkablePathList<T extends  LinkableBase, U extends LinkableBase> e
 
 	@Override
 	protected void action() {
+		concern(false);
+	}
+
+	private void concern(boolean update) {
 		List<U> neocache = navigator.apply(from);
 		// TODO 自動生成されたメソッド・スタブ
-		setConcernsInSecretly(makeInputArray(from,neocache));
-		if(isReady()){
+		var array = makeInputArray(from, neocache);
+		if (update) {
+			launchUpdate(array);
+		} else {
+			setConcernsInSecretly(array);
+		}
+		if (isReadyToAction()) {
 			List<U> oldcache = cache;
 			cache = neocache;
 			defaultRunListner(oldcache, neocache);

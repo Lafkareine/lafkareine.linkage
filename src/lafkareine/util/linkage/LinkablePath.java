@@ -3,10 +3,10 @@ package lafkareine.util.linkage;
 
 import java.util.function.Function;
 
-public class LinkablePath<T extends  LinkableBase, U extends LinkableBase> extends Readable<U> {
+public class LinkablePath<T extends  LinkableBase, U extends LinkableBase> extends Listenable<U> {
 
 	@Override
-	public final U get() {
+	public final U get(AutoGuaranteed guaranteed) {
 		return cache;
 	}
 
@@ -27,10 +27,11 @@ public class LinkablePath<T extends  LinkableBase, U extends LinkableBase> exten
 	public void set(T from, Function<? super T, ? extends U> navigator) {
 		this.from = from;
 		this.navigator = navigator;
-		U oldcache = cache;
-		cache = navigator.apply(from);
-		launchUpdate(from, navigator.apply(from));
-		defaultRunListner(oldcache,cache);
+		if(from.isReady()){
+			concern(true);
+		}else {
+			launchUpdate(from);
+		}
 	}
 
 	public void set(T from) {
@@ -40,10 +41,14 @@ public class LinkablePath<T extends  LinkableBase, U extends LinkableBase> exten
 
 	@Override
 	protected void action() {
+		concern(false);
+	}
+
+	private final void concern(boolean update){
 		U neocache = navigator.apply(from);
 		// TODO 自動生成されたメソッド・スタブ
-		setConcernsInSecretly(from, neocache);
-		if(isReady()){
+		if(update){launchUpdate(from, neocache);}else{setConcernsInSecretly(from, neocache);}
+		if(isReadyToAction()){
 			U oldcache = cache;
 			cache = neocache;
 			defaultRunListner(oldcache, neocache);
