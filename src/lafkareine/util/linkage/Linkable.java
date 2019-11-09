@@ -69,7 +69,7 @@ public class Linkable<T> extends Listenable<T> {
 	public final void set(T init, BasicAction<T> evalater, LinkableBase... concerns) {
 		this.evalater = evalater;
 		if(concerns == null) throw new NullPointerException(" Null concerns was denied");
-		launchFirstAction(concerns);
+		launchAction(concerns);
 	}
 	public final void set(NoArgAction<T> evalater, LinkableBase... concerns){
 		set(null, (BasicAction<T>) evalater, concerns);
@@ -93,6 +93,7 @@ public class Linkable<T> extends Listenable<T> {
 
 	public final void set(T value) {
 		cache = value;
+		evalater = null;
 		launchUpdate();
 	}
 	
@@ -110,10 +111,9 @@ public class Linkable<T> extends Listenable<T> {
 	private void eval(T arg){
 		T oldcache = arg;
 		T neocache = evalater.action(arg);
-		if(isReadyToAction()){
-			cache = neocache;
-			defaultRunListner(oldcache,neocache);
-		}
+		cache = neocache;
+		defaultRunListner(oldcache,neocache);
+
 	}
 
 

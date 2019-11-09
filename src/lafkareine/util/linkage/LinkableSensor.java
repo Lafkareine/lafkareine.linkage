@@ -4,7 +4,7 @@ package lafkareine.util.linkage;
 
 public class LinkableSensor extends LinkableBase{
 	
-	private boolean isActed = false;
+	private boolean isActed = true;
 
 	public LinkableSensor(boolean init, LinkableBase... concern) {
 		// TODO 自動生成されたコンストラクター・スタブ
@@ -18,14 +18,15 @@ public class LinkableSensor extends LinkableBase{
 	}
 
 	public LinkableSensor(){}
-	
+
+
 	public void setTarget(boolean init, LinkableBase... concern) {
 		isActed = init;
 		launchUpdate(concern);
 	}
 
 	public void setTarget(LinkableBase... concern) {
-		isActed = false;
+		isActed = true;
 		launchUpdate(concern);
 	}
 	
@@ -37,6 +38,8 @@ public class LinkableSensor extends LinkableBase{
 	
 	public boolean get() {
 		// TODO 自動生成されたメソッド・スタブ
-		return isActed;
+		boolean b = isActed;
+		isActed = !b;
+		return b;
 	}
 }

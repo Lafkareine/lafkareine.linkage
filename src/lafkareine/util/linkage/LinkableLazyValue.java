@@ -10,15 +10,6 @@ public abstract class LinkableLazyValue<T> extends Readable<T> {
 		super();
 	}
 
-	public final void update(LinkableBase... concerns){
-		launchFirstAction(concerns);
-	}
-
-	public final void update(T init, LinkableBase... concerns){
-		cache = init;
-		launchFirstAction(concerns);
-	}
-
 	public LinkableLazyValue(LinkableBase... concerns){
 		super();
 		update(concerns);
@@ -29,12 +20,20 @@ public abstract class LinkableLazyValue<T> extends Readable<T> {
 		update(init, concerns);
 	}
 
+	public final void update(LinkableBase... concerns){
+		launchAction(concerns);
+	}
+
+	public final void update(T init, LinkableBase... concerns){
+		cache = init;
+		launchAction(concerns);
+	}
+
 	@Override
 	public final T get(AutoGuaranteed guaranteed) {
 		if(needs){
-		needs = false;
-		cache = calc(cache);
-		if(isReady())throw new IllegalStateException("It's unready now");
+			needs = false;
+			cache = calc(cache);
 		}
 		return cache;
 	}

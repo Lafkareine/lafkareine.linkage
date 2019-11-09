@@ -64,6 +64,10 @@ public class LinkableAction extends Active {
 		// TODO 自動生成されたメソッド・スタブ
 		p_set(action, concerns);
 	}
+
+	public void set(LinkableBase... concerns){
+		p_set(action, concerns);
+	}
 	
 	public LinkableAction() {
 		// TODO 自動生成されたコンストラクター・スタブ

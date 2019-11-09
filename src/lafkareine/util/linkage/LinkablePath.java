@@ -5,16 +5,31 @@ import java.util.function.Function;
 
 public class LinkablePath<T extends  LinkableBase, U extends LinkableBase> extends Listenable<U> {
 
-	@Override
-	public final U get(AutoGuaranteed guaranteed) {
-		return cache;
+	private class Junction extends LinkableBase{
+
+		private T from;
+
+		public void set(T from) {
+			this.from = from;
+			launchAction(from);
+		}
+
+		@Override
+		protected void action() {
+			U oldcache = cache;
+			U neocache = navigator.apply(from);
+			cache = neocache;
+			LinkablePath.this.launchUpdate(this, neocache);
+			defaultRunListner(oldcache, neocache);
+		}
 	}
 
 	private U cache;
 
 	private Function<? super T, ? extends U> navigator;
-	
-	private T from;
+
+	private final Junction junction = new Junction();
+
 
 	public LinkablePath(){
 		super();
@@ -25,35 +40,22 @@ public class LinkablePath<T extends  LinkableBase, U extends LinkableBase> exten
 	}
 	
 	public void set(T from, Function<? super T, ? extends U> navigator) {
-		this.from = from;
 		this.navigator = navigator;
-		if(from.isReady()){
-			concern(true);
-		}else {
-			launchUpdate(from);
-		}
+		junction.set(from);
 	}
 
 	public void set(T from) {
-		this.from = from;
-		set(from,navigator);
+		junction.set(from);
 	}
 
 	@Override
-	protected void action() {
-		concern(false);
+	protected void action() {}
+
+	@Override
+	public final U get(AutoGuaranteed guaranteed) {
+		return cache;
 	}
 
-	private final void concern(boolean update){
-		U neocache = navigator.apply(from);
-		// TODO 自動生成されたメソッド・スタブ
-		if(update){launchUpdate(from, neocache);}else{setConcernsInSecretly(from, neocache);}
-		if(isReadyToAction()){
-			U oldcache = cache;
-			cache = neocache;
-			defaultRunListner(oldcache, neocache);
-		}
-	}
 }
 
 

@@ -12,6 +12,6 @@ public abstract class LinkableObject extends LinkableBase{
 	}
 
 	public final void setConcerns(LinkableBase... concerns){
-		launchFirstAction(concerns);
+		launchAction(concerns);
 	}
 }

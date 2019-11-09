@@ -13,12 +13,12 @@ public abstract class LinkableValue<T> extends Listenable<T> {
 	}
 
 	public final void update(LinkableBase... concerns){
-		launchFirstAction(concerns);
+		launchAction(concerns);
 	}
 
 	public final void update(T init, LinkableBase... concerns){
 		cache = init;
-		launchFirstAction(concerns);
+		launchAction(concerns);
 	}
 
 	private T cache;
@@ -31,12 +31,8 @@ public abstract class LinkableValue<T> extends Listenable<T> {
 	protected final void action() {
 		T oldcache = cache;
 		T neocache = calc(oldcache);
-		// 準備が完了していない親を持っている場合、無効な更新であるとしてキャッシュを更新せずリスナの駆動も行わない
-		// あとで親の準備がすべて完了したときにもう一回アクションがある
-		if(!isReadyToAction()){
 		cache = neocache;
-		defaultRunListner(oldcache, cache);
-		}
+		defaultRunListner(oldcache, neocache);
 	}
 
 	abstract protected T calc(T cache);

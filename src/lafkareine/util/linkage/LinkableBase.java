@@ -11,6 +11,10 @@ public abstract class LinkableBase {
 	 * 「ひずみがない」　→　0
 	 */
 	private int mark = 1;
+	private static final int SEND_DIFFER = Integer.MIN_VALUE+1;
+	private static final int SEND_READY = SEND_DIFFER+1;
+	private static final int SEND_CANCEL = SEND_READY+1;
+
 	private WeakReference<LinkableBase> weakref = new WeakReference<>(this);
 	private static final WeakReference<LinkableBase> nullref = new WeakReference<>(null);
 	private Object operation_slot;
@@ -21,17 +25,59 @@ public abstract class LinkableBase {
 	private static final WeakReference<LinkableBase>[] NOTHING_OBSERVERS = new WeakReference[]{};
 
 
-
-	protected final boolean isReadyToAction() {
-		return (mark == 0) || (mark == Integer.MAX_VALUE) || (mark == Integer.MIN_VALUE);
+	/**すべての関心ごとが信頼できる状態にあり、isReadyでtrueを返すとき、trueを返します
+	 * isReadyはaction()の中ではfalseを返し、isReadyToActionはaction()の中でtrueを返します
+	 *
+	 * */
+	public final boolean isAction() {
+		return (mark == Integer.MAX_VALUE) || (mark == Integer.MIN_VALUE);
 	}
 
+	/** このオブジェクトの状態が整合性において信頼できる状態の時、trueを返します
+	 *
+	 * */
 	public final boolean isReady(){
-		return mark == 0;
+		return (mark == 0)||(mark == SEND_READY)||(mark==SEND_CANCEL);
 	}
 
+	/** markが0である場合に
+	 *
+	 * */
+	private boolean isZero(){
+		return mark==0;
+	}
+
+	/** このオブジェクトが子オブジェクトに
+	 * オブジェクトがこの状態にあるとき、観察者を追加することはできますが、削除を行った際の結果は保証されません
+	 *
+	 * launch***のメソッドを利用した場合、観察者の状態は整合性を保つよう保証されます
+	 * */
+	public final boolean isSending(){
+		return (mark == SEND_DIFFER)||(mark == SEND_READY)||(mark==SEND_CANCEL);
+	}
+
+	public final boolean isInSpecialState(){
+		switch (mark){
+			case Integer.MAX_VALUE:
+			case Integer.MIN_VALUE:
+			case SEND_DIFFER:
+			case SEND_READY:
+			case SEND_CANCEL:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	/** 関心ごとの状態が変化したときか、またはlaunchActionが実行されたときに、LinkableBaseの機能によって自動的に実行されます
+	 *
+	 * */
 	protected abstract void action();
 
+	/** Action()の結果、その前後の状態に変化がなかったとき、観察者の更新をキャンセルするために呼び出すことができます
+	 * 観察者は、その観察者の関心ごとがすべてキャンセルを報告したとき、自身のAction()をキャンセルし、自身の観察者にキャンセルを報告します
+	 *
+	 * */
 	public final void RESULT_OPTION_CANCEL() {
 		assert (mark != Integer.MAX_VALUE) : "the operation is called outside this::action()";
 		mark = Integer.MIN_VALUE;
@@ -40,23 +86,30 @@ public abstract class LinkableBase {
 
 	private enum NOTIFICATION {DIFFER, READY, CANCEL}
 
-	private void send_observers(NOTIFICATION notification) {
+	/**　観察者になんらかの通知を送ります。送る通知の種類は引数によって指定されます
+	 * 通知を送信しているさいに観察者リストの状態が変更される状況を想定し、観察者リストを一時的にスタック上に対比します
+	 *
+	 * 観察者は、関心ごとが何かの通知を送っている間に自分を観察者リストから除外しようと思った場合、removeObserverを使わずに、自身のweakrefをclearしてください。
+	 */
+	private void send_observers(int notification) {
 		var ol = observers;
 		observers = NOTHING_OBSERVERS;
+		int temp_mark = mark;
+		mark = notification;
 		switch (notification) {
-			case DIFFER:
+			case SEND_DIFFER:
 				s_send_differ(ol);
 				break;
-			case READY:
+			case SEND_READY:
 				s_send_ready(ol);
 				break;
-			case CANCEL:
+			case SEND_CANCEL:
 				s_send_cancel(ol);
 				break;
 			default:
 				throw new IllegalArgumentException();
 		}
-		if (observers == NOTHING_OBSERVERS) {
+		if (observers != NOTHING_OBSERVERS) {
 			ol = optimize_observers(ol, observers.length);
 			int index_to = 0;
 			for (var e : observers) {
@@ -64,18 +117,19 @@ public abstract class LinkableBase {
 			}
 		}
 		observers = ol;
+		mark = temp_mark;
 	}
 
 	private void send_differ() {
-		send_observers(NOTIFICATION.DIFFER);
+		send_observers(SEND_DIFFER);
 	}
 
 	private void send_ready() {
-		send_observers(NOTIFICATION.READY);
+		send_observers(SEND_READY);
 	}
 
 	private void send_cancel() {
-		send_observers(NOTIFICATION.CANCEL);
+		send_observers(SEND_CANCEL);
 	}
 
 	private static void s_send_differ(WeakReference<LinkableBase>[] observers) {
@@ -110,6 +164,9 @@ public abstract class LinkableBase {
 		} else {
 			if (mark-- == 0) send_differ();
 		}
+		if(isInSpecialState()){
+			throw new IllegalStateException("too many many differs");
+		}
 	}
 
 	private void receive_ready() {
@@ -128,7 +185,6 @@ public abstract class LinkableBase {
 			int option = mark;
 			//オプションによって処理を分岐させる。
 			//オプションは、Integer.MAX_VALUE：普通の更新、Integer.MIX_VALUE:キャンセル、の二つを今のところ想定している
-			//親情報の更新では好き勝手な値がやってくる
 			switch (option) {
 				case Integer.MAX_VALUE:
 					mark = 0;
@@ -139,9 +195,15 @@ public abstract class LinkableBase {
 					send_cancel();
 					break;
 				default:
+					/**
 					//親情報を更新されたときなんかは、ひずみの解消されていない親が設定されるかもしれないので、receive_differが発せられた状態になっているかもしれない。
 					//その場合は、0になっていたときは更新処理ができるけど、それ以外ではとくに何もしない。
 					if (option == 0) send_ready();
+					 **/
+					/** setConcernInSecretlyをケジメし仕様を変更したことで、actionの中で親情報が書き換わることはなくなった
+					 * よって、optionが上記二つ以外の何かになったらエラーである
+					 * */
+					throw new IllegalStateException("you can't make the mark to any in action()");
 			}
 		}
 	}
@@ -154,56 +216,98 @@ public abstract class LinkableBase {
 		}
 	}
 
-
+	/** ・特殊な状態にあるときは呼べません
+	 * ・もともとの関心ごとの観察者リストから自分を除外します。このとき、関心ごとが通知処理中か考慮されます
+	 * ・必要ならひずみを送信します
+	 * ・関心ごとを新しいものに入れ替えます
+	 * ・可能であればreadyを送信します
+	 */
 	protected final void launchUpdate(LinkableBase... new_concerns) {
-		assert (!(mark == Integer.MAX_VALUE || mark == Integer.MIN_VALUE)) : "it is refresh-event now, the operation can't call in refresh-event";
-
-		if (isReady()) {
-			send_differ();
-		}
-
-		swapConcerns(new_concerns);
-
-		if (isReady()) {
-			send_ready();
-		}
+		launchAny(false,new_concerns);
 	}
 
+	/** ・特殊な状態にあるときは呼べません
+	 * ・もともとの関心ごとの観察者リストから自分を除外します。このとき、関心ごとが通知処理中か考慮されます
+	 * ・必要ならひずみを送信します
+	 * ・関心ごとをからっぽにします
+	 * ・可能であればreadyを送信します
+	 */
 	protected final void launchUpdate() {
 		launchUpdate(NOTHING_CONCERNS);
 	}
-	protected final void launchFirstAction(){launchFirstAction(NOTHING_CONCERNS);}
 
-	protected final void launchFirstAction(LinkableBase... new_concerns){
+	/** ・特殊な状態にあるときは呼べません
+	 * ・もともとの関心ごとの観察者リストから自分を除外します。このとき、関心ごとが通知処理中か考慮されます
+	 * ・必要ならひずみを送信します
+	 * ・関心ごとを新しいものに入れ替えます
+	 * ・可能であればactionを呼び出します
+	 * ・結果に応じて、readyかcancelを送信します
+	*/
+	protected final void launchAction(LinkableBase... new_concerns){
+		launchAny(true,new_concerns);
+	}
 
-		assert (!(mark == Integer.MAX_VALUE || mark == Integer.MIN_VALUE)) : "it is refresh-event now, the operation can't call in refresh-event";
+	/** ・特殊な状態にあるときは呼べません
+	 * ・もともとの関心ごとの観察者リストから自分を除外します。このとき、関心ごとが通知処理中か考慮されます
+	 * ・必要ならひずみを送信します
+	 * ・関心ごとをからっぽにします
+	 * ・actionを呼び出します
+	 * ・結果に応じて、readyかcancelを送信します
+	 */
+	protected final void launchAction(){
+		launchAction(NOTHING_CONCERNS);
+	}
 
-		if(isReady())send_differ();
-
-		for (var e : concerns) {
-			e.remove_observer(this.weakref);
+	private void launchAny(boolean action, LinkableBase... new_concerns){
+		if (!isInSpecialState()){
+			throw new IllegalStateException("you can't launch any in action() and sending any");
 		}
-		concerns = BEFORE_INITIALIZING;
-		boolean ready = true;
-		check:
-		for(var e : new_concerns){
-			if(!e.isReady()){
-				ready = false;
-				break check;
-			}
+
+		// 関心ごとのうち、ひとつでも送信中だったら、観察者リストの整合性を保つため、弱参照キャッシュを入れ替える
+
+
+		boolean in_sending = false;
+		for(var e:concerns){
+			in_sending |= e.isSending();
+		}
+		if(in_sending){
+			weakref.clear();
+			weakref = new WeakReference<>(this);
 		}
 
-		if(ready) {
-			mark = Integer.MAX_VALUE;
-			action();
+		// これから更新が始まるので、すでにひずんだ状態であった場合を除き、ひずみ増加の通知を行う
+		// ただしすでに何かを送信中であった場合、明らかに整合性が取れなくなるのでその場合は考えない
+		if(isZero()){
+			send_differ();
 		}
-		if(concerns == BEFORE_INITIALIZING) swapConcerns(new_concerns);
-		if (isReadyToAction()) {
+		swapConcerns(new_concerns);
+
+		//新しく設定された親がすでに信頼できる状態なら
+		if(isZero()){
+			//actionを行うかで分岐して
+			if(action){
+				mark = Integer.MAX_VALUE;
+				action();
+				int option = mark;
 				mark = 0;
+				switch (option){
+					case Integer.MAX_VALUE:
+						send_ready();
+						break;
+					case Integer.MIN_VALUE:
+						send_cancel();
+						break;
+					default:
+						throw new IllegalStateException("you can't make the mark to any in action()");
+				}
+			}else{
+				//actionしないならそのまま子の更新を始める
 				send_ready();
+			}
 		}
 	}
 
+	/*
 	public final void setConcernsInSecretly(LinkableBase... new_concerns) {
 		// assert (mark != Integer.MIN_VALUE) : "the accepting was canceled, the operation cause a risk to brake integrity";
 		assert (mark == Integer.MAX_VALUE) : "it is not refresh-event now, the operation can call in refresh-event only";
@@ -215,13 +319,15 @@ public abstract class LinkableBase {
 		swapConcerns(new_concerns);
 	}
 
+	 */
+
 	private void swapConcerns(LinkableBase[] new_concerns) {
 		for (var e : concerns) {
 			e.remove_observer(this.weakref);
 		}
 		if (new_concerns == BEFORE_INITIALIZING) {
 			mark = 1;
-			concerns = BEFORE_INITIALIZING;
+			concerns = new_concerns;
 		} else {
 			mark = 0;
 			var opt_concerns = optimize_concerns(new_concerns);
@@ -232,6 +338,9 @@ public abstract class LinkableBase {
 				}
 			}
 			concerns = opt_concerns;
+		}
+		if(isInSpecialState()){
+			throw new IllegalStateException("too many many differs");
 		}
 	}
 

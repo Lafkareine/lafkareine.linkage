@@ -4,7 +4,28 @@ package lafkareine.util.linkage;
 import java.util.List;
 import java.util.function.Function;
 
-public class LinkablePathList<T extends  LinkableBase, U extends LinkableBase> extends Listenable<List<U>> {
+public class LinkablePathList<T extends LinkableBase, U extends LinkableBase> extends Listenable<List<U>> {
+
+	private class Junction extends LinkableBase{
+
+		private T from;
+
+		private void set(T from){
+			this.from = from;
+			launchAction(from);
+		}
+
+		@Override
+		protected void action() {
+			List<U> neocache = navigator.apply(from);
+			List<U> oldcache = cache;
+			cache = neocache;
+
+			var array = makeInputArray(this, neocache);
+			LinkablePathList.this.launchUpdate(array);
+			defaultRunListner(oldcache, neocache);
+		}
+	}
 
 	@Override
 	public final List<U> get(AutoGuaranteed guaranteed) {
@@ -13,9 +34,9 @@ public class LinkablePathList<T extends  LinkableBase, U extends LinkableBase> e
 
 	private List<U> cache;
 
-	private Function<? super T, ? extends List<U>> navigator;
+	private Junction junction = new Junction();
 
-	private T from;
+	private Function<? super T, ? extends List<U>> navigator;
 
 	public LinkablePathList() {
 		super();
@@ -25,15 +46,15 @@ public class LinkablePathList<T extends  LinkableBase, U extends LinkableBase> e
 		set(from, navigator);
 	}
 
-	public void set(T from, Function<? super T, ? extends List<U>> navigator) {
-		this.from = from;
-		this.navigator = navigator;
-		if(from.isReady()) {
-			concern(true);
-		}else {
-			launchUpdate(from);
-		}
+	public void set(T from) {
+		junction.set(from);
 	}
+
+	public void set(T from, Function<? super T, ? extends List<U>> navigator) {
+		this.navigator = navigator;
+		junction.set(from);
+	}
+
 
 	private static LinkableBase[] makeInputArray(LinkableBase from, List<? extends LinkableBase> path) {
 		LinkableBase[] inputs = new LinkableBase[path.size() + 1];
@@ -47,23 +68,6 @@ public class LinkablePathList<T extends  LinkableBase, U extends LinkableBase> e
 
 	@Override
 	protected void action() {
-		concern(false);
-	}
-
-	private void concern(boolean update) {
-		List<U> neocache = navigator.apply(from);
-		// TODO 自動生成されたメソッド・スタブ
-		var array = makeInputArray(from, neocache);
-		if (update) {
-			launchUpdate(array);
-		} else {
-			setConcernsInSecretly(array);
-		}
-		if (isReadyToAction()) {
-			List<U> oldcache = cache;
-			cache = neocache;
-			defaultRunListner(oldcache, neocache);
-		}
 	}
 }
 

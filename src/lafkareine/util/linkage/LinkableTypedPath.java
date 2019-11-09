@@ -4,11 +4,30 @@ import java.util.function.Function;
 
 public class LinkableTypedPath<T, U> extends Listenable<U> {
 
+	private class Junction extends LinkableBase{
+		private Readable<? extends T> from;
+
+		public void set(Readable<? extends T> from) {
+			this.from = from;
+			launchAction(from);
+		}
+
+		@Override
+		protected void action() {
+			U oldcache = cache;
+			Readable<U> target = navigator.apply(from.get());
+			U neocache = target.get();
+			cache = neocache;
+			launchUpdate(this,target);
+			defaultRunListner(oldcache,neocache);
+		}
+	}
+
 	private U cache;
 
-	private Function<? super T, ? extends Listenable<U>> navigator;
+	private Function<? super T, ? extends Readable<U>> navigator;
 
-	private Listenable<? extends T> from;
+	private final Junction junction = new Junction();
 
 	@Override
 	protected void action() {
@@ -19,36 +38,20 @@ public class LinkableTypedPath<T, U> extends Listenable<U> {
 		super();
 	}
 
-	public LinkableTypedPath(Listenable<? extends T> from, Function<? super T,? extends Listenable<U>> navigator){
+	public LinkableTypedPath(Readable<? extends T> from, Function<? super T,? extends Readable<U>> navigator){
 		set(from, navigator);
 	}
 
-	public void set(Listenable<? extends T> from, Function<? super T,? extends Listenable<U>> navigator){
-		this.from = from;
+	public void set(Readable<? extends T> from, Function<? super T,? extends Readable<U>> navigator){
 		this.navigator = navigator;
-		if(from.isReady()){
-			concern(true);
-		}else {
-			launchUpdate(from);
-		}
+		junction.set(from);
 	}
 
 	private void concern(boolean update){
-		U oldcache = cache;
-		Listenable<U> target = navigator.apply(from.get());
-		if(update){
-			launchUpdate(from,target);
-		}else{
-			setConcernsInSecretly(from, target);
-		}
-		if(isReadyToAction()) {
-			cache = target.get();
-			defaultRunListner(oldcache,cache);
-		}
+
 	}
 
-	public void set(Listenable<? extends T> from) {
-		this.from = from;
+	public void set(Readable<? extends T> from) {
 		set(from,navigator);
 	}
 

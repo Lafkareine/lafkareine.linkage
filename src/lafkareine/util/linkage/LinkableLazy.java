@@ -92,10 +92,6 @@ public class LinkableLazy<T> extends Readable<T>{
 
 	public LinkableLazy(T init, BasicAction<T> evalater, LazyOption option, LinkableBase... concerns) {
 		// TODO 自動生成されたコンストラクター・スタブ
-		/** Impulsive Killer Jack The Ripper
-		 *
-		 */
-
 		set(init, evalater, option, concerns);
 	}
 
@@ -137,8 +133,6 @@ public class LinkableLazy<T> extends Readable<T>{
 		set(init, evalater, LazyOption.QUICK, concerns);
 	}
 	
-	/** @param evalater
-	 */
 	public void set(T init, BasicAction<T> evalater) {
 		set(init, evalater, LazyOption.QUICK, inferConcerns(evalater));
 	}
@@ -155,9 +149,8 @@ public class LinkableLazy<T> extends Readable<T>{
 	//setWithOption
 	public void set(T init, BasicAction<T> evalater, LazyOption option, LinkableBase... concerns) {
 
-		if(concerns == null) throw new NullPointerException(" Null concerns was denied");
+		if(concerns == null) throw new NullPointerException("Null concerns was denied");
 		this.evalater = evalater;
-
 		if (option == LazyOption.QUICK) {
 			lazyflag = 0;
 		} else {
@@ -165,7 +158,7 @@ public class LinkableLazy<T> extends Readable<T>{
 		}
 		cache = init;
 
-		launchFirstAction(concerns);
+		launchAction(concerns);
 	}
 	
 	public void set(NoArgAction<T> evalater, LazyOption option, LinkableBase... concerns) {
@@ -176,8 +169,6 @@ public class LinkableLazy<T> extends Readable<T>{
 		set(init, (BasicAction<T>) evalater, option, concerns);
 	}
 	
-	/** @param evalater
-	 */
 	public void set(T init, BasicAction<T> evalater, LazyOption option) {
 		set(init, evalater, option, inferConcerns(evalater));
 	}
@@ -191,7 +182,6 @@ public class LinkableLazy<T> extends Readable<T>{
 	}
 	
 	//setInLazy
-	
 	public void setInLazy(T init, BasicAction<T> evalater, LinkableBase... concerns) {
 		set(init, evalater, LazyOption.LAZY, concerns);
 	}
@@ -204,8 +194,6 @@ public class LinkableLazy<T> extends Readable<T>{
 		set(init, evalater, LazyOption.LAZY, concerns);
 	}
 	
-	/** @param evalater
-	 */
 	public void setInLazy(T init, BasicAction<T> evalater) {
 		setInLazy(init, evalater, inferConcerns(evalater));
 	}
@@ -236,13 +224,9 @@ public class LinkableLazy<T> extends Readable<T>{
 			return cache;
 		} else {
 			cache = evalater.action(cache);
-			if(isReady()){
-				lazyflag = 1;
-			} else{
-				throw new IllegalStateException("It's unready now");
-			}
+			lazyflag = 1;
+			return cache;
 		}
-		return cache;
 	}
 	
 	@Override
