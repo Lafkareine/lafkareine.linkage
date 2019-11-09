@@ -33,6 +33,14 @@ public class Shift extends LinkableBase{
 		}
 	}
 
+	public Shift(){
+		super();
+	}
+
+	public Shift(ConcernSelector selector, LinkableBase... roots){
+		set(selector,roots);
+	}
+
 	private Gear gear = new Gear();
 
 	public void set(ConcernSelector selector, LinkableBase... roots){
