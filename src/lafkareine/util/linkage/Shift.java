@@ -29,7 +29,13 @@ public class Shift extends LinkableBase{
 
 		@Override
 		public void setConcerns(LinkableBase... concerns) {
-			Shift.this.launchUpdate(concerns);
+			LinkableBase[] array = new LinkableBase[concerns.length+1];
+			int i = 0;
+			array[i++] = this;
+			for(var e:concerns){
+				array[i++] = e;
+			}
+			Shift.this.launchUpdate(array);
 		}
 	}
 

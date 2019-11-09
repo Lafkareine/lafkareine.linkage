@@ -9,7 +9,13 @@ public abstract class Shift2 extends LinkableBase{
 	private class Gear extends LinkableBase implements ConcernSetter{
 		@Override
 		public final void setConcerns(LinkableBase... concerns){
-			Shift2.this.launchUpdate(concerns);
+			LinkableBase[] array = new LinkableBase[concerns.length+1];
+			int i = 0;
+			array[i++] = this;
+			for(var e:concerns){
+				array[i++] = e;
+			}
+			Shift2.this.launchUpdate(array);
 		}
 
 		@Override
