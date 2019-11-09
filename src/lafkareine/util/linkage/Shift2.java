@@ -7,6 +7,7 @@ public abstract class Shift2 extends LinkableBase{
 	}
 
 	private class Gear extends LinkableBase implements ConcernSetter{
+		@Override
 		public final void setConcerns(LinkableBase... concerns){
 			Shift2.this.launchUpdate(concerns);
 		}
